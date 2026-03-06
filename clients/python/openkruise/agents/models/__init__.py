@@ -12,10 +12,12 @@ from .sandboxset import (
     Status as SandboxSetStatus,
     TemplateRef as SandboxSetTemplateRef,
     Condition as SandboxSetCondition,
+    ScaleStrategy as SandboxSetScaleStrategy,
 )
 from .sandboxclaim import (
     SandboxClaim,
     Spec as SandboxClaimSpec,
     Status as SandboxClaimStatus,
     Condition as SandboxClaimCondition,
+    InplaceUpdate as SandboxClaimInplaceUpdate,
 )
