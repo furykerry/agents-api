@@ -17,19 +17,28 @@ limitations under the License.
 package v1alpha1
 
 import (
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 const (
 	InternalPrefix = "agents.kruise.io/"
 
-	LabelSandboxPool  = InternalPrefix + "sandbox-pool"
-	LabelTemplateHash = InternalPrefix + "template-hash"
+	// LabelSandboxPool identifies which SandboxSet generated the sandbox, which is deprecated and will be removed in the future
+	LabelSandboxPool = InternalPrefix + "sandbox-pool"
+	// LabelSandboxTemplate identifies which template generated the sandbox
+	LabelSandboxTemplate = InternalPrefix + "sandbox-template"
+	// LabelSandboxIsClaimed indicates whether the sandbox has been claimed by user
+	LabelSandboxIsClaimed = InternalPrefix + "sandbox-claimed"
+	// LabelSandboxClaimName indicates the name of the SandboxClaim that claimed this sandbox
+	LabelSandboxClaimName = InternalPrefix + "claim-name"
+	LabelTemplateHash     = InternalPrefix + "template-hash"
 
-	AnnotationLock      = InternalPrefix + "lock"
-	AnnotationOwner     = InternalPrefix + "owner"
-	AnnotationClaimTime = InternalPrefix + "claim-timestamp"
+	AnnotationLock               = InternalPrefix + "lock"
+	AnnotationOwner              = InternalPrefix + "owner"
+	AnnotationClaimTime          = InternalPrefix + "claim-timestamp"
+	AnnotationRestoreFrom        = InternalPrefix + "restore-from"
+	AnnotationInitRuntimeRequest = InternalPrefix + "init-runtime-request"
 )
 
 const (
@@ -50,15 +59,20 @@ type SandboxSetSpec struct {
 	// PersistentContents indicates resume pod with persistent content, Enum: ip, memory, filesystem
 	PersistentContents []string `json:"persistentContents,omitempty"`
 
-	// TemplateRef references a SandboxTemplate, which will be used to create the sandbox.
-	// +optional
-	TemplateRef *SandboxTemplateRef `json:"templateRef,omitempty"`
+	EmbeddedSandboxTemplate `json:",inline"`
 
-	// Template describes the pods that will be created.
-	// +kubebuilder:pruning:PreserveUnknownFields
-	// +kubebuilder:validation:Schemaless
-	// +optional
-	Template *v1.PodTemplateSpec `json:"template,omitempty"`
+	// ScaleStrategy indicates the ScaleStrategy that will be employed to
+	// create and delete Sandboxes in the SandboxSet.
+	ScaleStrategy SandboxSetScaleStrategy `json:"scaleStrategy,omitempty"`
+}
+
+// SandboxSetScaleStrategy defines strategies for sandboxes scale.
+type SandboxSetScaleStrategy struct {
+	// The maximum number of sandboxes that can be unavailable for scaled sandboxes.
+	// This field can control the changes rate of replicas for SandboxSet so as to minimize the impact for users' service.
+	// The scale will fail if the number of unavailable sandboxes were greater than this MaxUnavailable at scaling up.
+	// MaxUnavailable works only when scaling up.
+	MaxUnavailable *intstr.IntOrString `json:"maxUnavailable,omitempty"`
 }
 
 // SandboxSetStatus defines the observed state of SandboxSet.

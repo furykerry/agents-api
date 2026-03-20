@@ -28,12 +28,24 @@ type FakeAgentsV1alpha1 struct {
 	*testing.Fake
 }
 
+func (c *FakeAgentsV1alpha1) Checkpoints(namespace string) v1alpha1.CheckpointInterface {
+	return newFakeCheckpoints(c, namespace)
+}
+
 func (c *FakeAgentsV1alpha1) Sandboxes(namespace string) v1alpha1.SandboxInterface {
 	return newFakeSandboxes(c, namespace)
 }
 
+func (c *FakeAgentsV1alpha1) SandboxClaims(namespace string) v1alpha1.SandboxClaimInterface {
+	return newFakeSandboxClaims(c, namespace)
+}
+
 func (c *FakeAgentsV1alpha1) SandboxSets(namespace string) v1alpha1.SandboxSetInterface {
 	return newFakeSandboxSets(c, namespace)
+}
+
+func (c *FakeAgentsV1alpha1) SandboxTemplates(namespace string) v1alpha1.SandboxTemplateInterface {
+	return newFakeSandboxTemplates(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

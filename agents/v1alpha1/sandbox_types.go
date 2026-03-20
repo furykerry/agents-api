@@ -19,6 +19,22 @@ package v1alpha1
 import (
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
+)
+
+const (
+	// SandboxHashWithoutImageAndResources represents the key of sandbox hash without image and resources.
+	SandboxHashWithoutImageAndResources = "sandbox.agents.kruise.io/hash-without-image-resources"
+
+	// PodLabelTemplateHash is pod template hash
+	PodLabelTemplateHash = "pod-template-hash"
+
+	// SandboxAnnotationPriority is the annotation key for sandbox priority.
+	// If not set, the default value is 0.
+	// Larger values indicate higher priority.
+	// Note: SandboxSet creates sandboxes with priority 0 by default.
+	// Sandbox Manager or Sandbox Claim creates high-priority sandboxes by default.
+	SandboxAnnotationPriority = "agents.kruise.io/sandbox-priority"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -43,6 +59,15 @@ type SandboxSpec struct {
 	// +kubebuilder:validation:Format="date-time"
 	ShutdownTime *metav1.Time `json:"shutdownTime,omitempty"`
 
+	// PauseTime - Absolute time when the sandbox will be paused automatically.
+	// +kubebuilder:validation:Format="date-time"
+	PauseTime *metav1.Time `json:"pauseTime,omitempty"`
+
+	EmbeddedSandboxTemplate `json:",inline"`
+}
+
+type EmbeddedSandboxTemplate struct {
+
 	// TemplateRef references a SandboxTemplate, which will be used to create the sandbox.
 	// +optional
 	TemplateRef *SandboxTemplateRef `json:"templateRef,omitempty"`
@@ -53,9 +78,15 @@ type SandboxSpec struct {
 	// +kubebuilder:validation:Schemaless
 	// +optional
 	Template *v1.PodTemplateSpec `json:"template,omitempty"`
+
+	// VolumeClaimTemplates is a list of PVC templates to create for this Sandbox.
+	// +kubebuilder:pruning:PreserveUnknownFields
+	// +kubebuilder:validation:Schemaless
+	// +optional
+	VolumeClaimTemplates []v1.PersistentVolumeClaim `json:"volumeClaimTemplates,omitempty"`
 }
 
-// SandboxTemmplateRef references a SandboxTemplate
+// SandboxTemplateRef references a SandboxTemplate
 type SandboxTemplateRef struct {
 	// name of the SandboxTemplate
 	// +kubebuilder:validation:Required
@@ -116,6 +147,10 @@ type SandboxStatus struct {
 	// SandboxIp is the ip address allocated to the sandbox.
 	// +optional
 	SandboxIp string `json:"sandboxIp,omitempty"`
+
+	// UpdateRevision is the template-hash calculated from `spec.template`.
+	// +optional
+	UpdateRevision string `json:"updateRevision,omitempty"`
 }
 
 // SandboxPhase is a label for the condition of a pod at the current time.
@@ -155,6 +190,8 @@ type PodInfo struct {
 	NodeName string `json:"nodeName,omitempty"`
 	// PodIP address allocated to the pod.
 	PodIP string `json:"podIP,omitempty"`
+	// PodUID is pod uid.
+	PodUID types.UID `json:"podUID,omitempty"`
 }
 
 // SandboxConditionType is a valid value for SandboxCondition.Type
@@ -171,16 +208,27 @@ const (
 
 	// SandboxConditionResumed means to resume the sandbox.
 	SandboxConditionResumed SandboxConditionType = "SandboxResumed"
+
+	// SandboxConditionInplaceUpdate means inplace update state.
+	SandboxConditionInplaceUpdate SandboxConditionType = "InplaceUpdate"
 )
 
 const (
-	SandboxReadyReasonPodReady = "PodReady"
+	// SandboxConditionReady Reason
+	SandboxReadyReasonPodReady             = "PodReady"
+	SandboxReadyReasonInplaceUpdating      = "InplaceUpdating"
+	SandboxReadyReasonStartContainerFailed = "StartContainerFailed"
 
-	// SandboxConditionPaused's Reason
+	// SandboxConditionInplaceUpdate Reason
+	SandboxInplaceUpdateReasonInplaceUpdating = "InplaceUpdating"
+	SandboxInplaceUpdateReasonSucceeded       = "Succeeded"
+	SandboxInplaceUpdateReasonFailed          = "Failed"
+
+	// SandboxConditionPaused Reason
 	SandboxPausedReasonSetPause  = "SetPause"
 	SandboxPausedReasonDeletePod = "DeletePod"
 
-	// SandboxConditionResume's Reason
+	// SandboxConditionResume Reason
 	SandboxResumeReasonCreatePod = "CreatePod"
 	SandboxResumeReasonResumePod = "ResumePod"
 )
@@ -193,6 +241,7 @@ const (
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 // +kubebuilder:printcolumn:name="shutdown_time",type="string",JSONPath=".spec.shutdownTime"
+// +kubebuilder:printcolumn:name="pause_time",type="string",JSONPath=".spec.pauseTime"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message"
 
 // Sandbox is the Schema for the sandboxes API

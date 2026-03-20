@@ -18,6 +18,12 @@ limitations under the License.
 
 package v1alpha1
 
+type CheckpointExpansion interface{}
+
 type SandboxExpansion interface{}
 
+type SandboxClaimExpansion interface{}
+
 type SandboxSetExpansion interface{}
+
+type SandboxTemplateExpansion interface{}

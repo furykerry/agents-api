@@ -24,10 +24,16 @@ import (
 
 // Interface provides access to all the informers in this group version.
 type Interface interface {
+	// Checkpoints returns a CheckpointInformer.
+	Checkpoints() CheckpointInformer
 	// Sandboxes returns a SandboxInformer.
 	Sandboxes() SandboxInformer
+	// SandboxClaims returns a SandboxClaimInformer.
+	SandboxClaims() SandboxClaimInformer
 	// SandboxSets returns a SandboxSetInformer.
 	SandboxSets() SandboxSetInformer
+	// SandboxTemplates returns a SandboxTemplateInformer.
+	SandboxTemplates() SandboxTemplateInformer
 }
 
 type version struct {
@@ -41,12 +47,27 @@ func New(f internalinterfaces.SharedInformerFactory, namespace string, tweakList
 	return &version{factory: f, namespace: namespace, tweakListOptions: tweakListOptions}
 }
 
+// Checkpoints returns a CheckpointInformer.
+func (v *version) Checkpoints() CheckpointInformer {
+	return &checkpointInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // Sandboxes returns a SandboxInformer.
 func (v *version) Sandboxes() SandboxInformer {
 	return &sandboxInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
 
+// SandboxClaims returns a SandboxClaimInformer.
+func (v *version) SandboxClaims() SandboxClaimInformer {
+	return &sandboxClaimInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
 // SandboxSets returns a SandboxSetInformer.
 func (v *version) SandboxSets() SandboxSetInformer {
 	return &sandboxSetInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
+}
+
+// SandboxTemplates returns a SandboxTemplateInformer.
+func (v *version) SandboxTemplates() SandboxTemplateInformer {
+	return &sandboxTemplateInformer{factory: v.factory, namespace: v.namespace, tweakListOptions: v.tweakListOptions}
 }
