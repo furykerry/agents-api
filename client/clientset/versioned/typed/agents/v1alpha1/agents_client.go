@@ -33,6 +33,7 @@ type AgentsV1alpha1Interface interface {
 	SandboxClaimsGetter
 	SandboxSetsGetter
 	SandboxTemplatesGetter
+	SandboxUpdateOpsesGetter
 }
 
 // AgentsV1alpha1Client is used to interact with features provided by the agents group.
@@ -58,6 +59,10 @@ func (c *AgentsV1alpha1Client) SandboxSets(namespace string) SandboxSetInterface
 
 func (c *AgentsV1alpha1Client) SandboxTemplates(namespace string) SandboxTemplateInterface {
 	return newSandboxTemplates(c, namespace)
+}
+
+func (c *AgentsV1alpha1Client) SandboxUpdateOpses(namespace string) SandboxUpdateOpsInterface {
+	return newSandboxUpdateOpses(c, namespace)
 }
 
 // NewForConfig creates a new AgentsV1alpha1Client for the given config.

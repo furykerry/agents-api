@@ -24,7 +24,12 @@ import (
 
 const (
 	// SandboxHashWithoutImageAndResources represents the key of sandbox hash without image and resources.
+	// Deprecated, use SandboxHashImmutablePart instead
 	SandboxHashWithoutImageAndResources = "sandbox.agents.kruise.io/hash-without-image-resources"
+
+	// SandboxHashImmutablePart represents the key of sandbox hash than exclude immutable part of sandbox
+	// e.g. metadata, image and resources
+	SandboxHashImmutablePart = "sandbox.agents.kruise.io/hash-immutable-part"
 
 	// PodLabelTemplateHash is pod template hash
 	PodLabelTemplateHash = "pod-template-hash"
@@ -78,6 +83,14 @@ type SandboxSpec struct {
 	// +kubebuilder:validation:Format="date-time"
 	PauseTime *metav1.Time `json:"pauseTime,omitempty"`
 
+	// Lifecycle defines lifecycle hooks for sandbox upgrade.
+	// +optional
+	Lifecycle *SandboxLifecycle `json:"lifecycle,omitempty"`
+
+	// UpgradePolicy defines the upgrade strategy for the sandbox.
+	// +optional
+	UpgradePolicy *SandboxUpgradePolicy `json:"upgradePolicy,omitempty"`
+
 	EmbeddedSandboxTemplate `json:",inline"`
 }
 
@@ -116,6 +129,53 @@ type SandboxTemplateRef struct {
 	// Default to v1
 	// +optional
 	APIVersion *string `json:"apiVersion,omitempty"`
+}
+
+// SandboxUpgradePolicyType is the type of sandbox update policy.
+type SandboxUpgradePolicyType string
+
+const (
+	// SandboxUpgradePolicyRecreate means sandbox will be updated by recreating the pod.
+	SandboxUpgradePolicyRecreate SandboxUpgradePolicyType = "Recreate"
+)
+
+// SandboxUpgradePolicy defines the upgrade strategy for the sandbox.
+// When Type is empty (default), the sandbox does not support upgrading.
+// Only when Type is explicitly set (e.g., Recreate), the upgrade capability is enabled.
+type SandboxUpgradePolicy struct {
+	// Type specifies the upgrade policy type.
+	// When empty (default), upgrading is disabled.
+	// Supported values: Recreate.
+	// +optional
+	Type SandboxUpgradePolicyType `json:"type,omitempty"`
+}
+
+// SandboxLifecycle defines lifecycle hooks for sandbox upgrade.
+type SandboxLifecycle struct {
+	// PreUpgrade is the action executed before the upgrade.
+	// It is typically used to backup workspace data.
+	// +optional
+	PreUpgrade *UpgradeAction `json:"preUpgrade,omitempty"`
+
+	// PostUpgrade is the action executed after the upgrade.
+	// It is typically used to restore workspace data.
+	// +optional
+	PostUpgrade *UpgradeAction `json:"postUpgrade,omitempty"`
+}
+
+// UpgradeAction defines an action to execute during sandbox upgrade.
+// It supports multiple action types for extensibility.
+type UpgradeAction struct {
+	// Exec specifies the command to execute inside the sandbox via envd.
+	// The first element is the command, the rest are args.
+	// For shell scripts, use: ["/bin/bash", "-c", "your-script"]
+	// +optional
+	Exec *v1.ExecAction `json:"exec,omitempty"`
+
+	// TimeoutSeconds is the timeout for the action execution in seconds.
+	// +kubebuilder:default=60
+	// +optional
+	TimeoutSeconds int32 `json:"timeoutSeconds,omitempty"`
 }
 
 const (
@@ -185,6 +245,8 @@ const (
 	SandboxPaused SandboxPhase = "Paused"
 	// SandboxResuming means the sandbox has entered the resume state
 	SandboxResuming SandboxPhase = "Resuming"
+	// SandboxUpgrading means the sandbox is being upgraded (recreate or inplace update).
+	SandboxUpgrading SandboxPhase = "Upgrading"
 	// SandboxSucceeded means that all containers in the pod have voluntarily terminated
 	// with a container exit code of 0, and the system is not going to restart any of these containers.
 	SandboxSucceeded SandboxPhase = "Succeeded"
@@ -226,18 +288,31 @@ const (
 
 	// SandboxConditionInplaceUpdate means inplace update state.
 	SandboxConditionInplaceUpdate SandboxConditionType = "InplaceUpdate"
+
+	// SandboxConditionUpgrading means upgrade state.
+	SandboxConditionUpgrading SandboxConditionType = "Upgrading"
 )
 
 const (
 	// SandboxConditionReady Reason
 	SandboxReadyReasonPodReady             = "PodReady"
 	SandboxReadyReasonInplaceUpdating      = "InplaceUpdating"
+	SandboxReadyReasonUpgrading            = "Upgrading"
 	SandboxReadyReasonStartContainerFailed = "StartContainerFailed"
 
 	// SandboxConditionInplaceUpdate Reason
 	SandboxInplaceUpdateReasonInplaceUpdating = "InplaceUpdating"
 	SandboxInplaceUpdateReasonSucceeded       = "Succeeded"
 	SandboxInplaceUpdateReasonFailed          = "Failed"
+
+	// SandboxConditionUpgrading Reason
+	SandboxUpgradingReasonPreUpgrade        = "PreUpgrade"
+	SandboxUpgradingReasonUpgradePod        = "UpgradePod"
+	SandboxUpgradingReasonPostUpgrade       = "PostUpgrade"
+	SandboxUpgradingReasonPreUpgradeFailed  = "PreUpgradeFailed"
+	SandboxUpgradingReasonPostUpgradeFailed = "PostUpgradeFailed"
+	SandboxUpgradingReasonSucceeded         = "Succeeded"
+	SandboxUpgradingReasonUpgradePodFailed  = "UpgradePodFailed"
 
 	// SandboxConditionPaused Reason
 	SandboxPausedReasonSetPause  = "SetPause"
@@ -255,6 +330,7 @@ const (
 // +kubebuilder:storageversion
 // +kubebuilder:printcolumn:name="Status",type="string",JSONPath=".status.phase"
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="Claimed",type="string",JSONPath=".metadata.labels.agents\\.kruise\\.io/sandbox-claimed"
 // +kubebuilder:printcolumn:name="shutdown_time",type="string",JSONPath=".spec.shutdownTime"
 // +kubebuilder:printcolumn:name="pause_time",type="string",JSONPath=".spec.pauseTime"
 // +kubebuilder:printcolumn:name="Message",type="string",JSONPath=".status.message"
