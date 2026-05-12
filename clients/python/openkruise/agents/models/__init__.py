@@ -1,3 +1,8 @@
+from .checkpoint import (
+    Checkpoint,
+    Spec as CheckpointSpec,
+    Status as CheckpointStatus,
+)
 from .sandbox import (
     Sandbox,
     Spec as SandboxSpec,
@@ -6,6 +11,14 @@ from .sandbox import (
     Condition as SandboxCondition,
     PodInfo as SandboxPodInfo,
     Runtime as SandboxRuntime,
+)
+from .sandboxclaim import (
+    SandboxClaim,
+    Spec as SandboxClaimSpec,
+    Status as SandboxClaimStatus,
+    Condition as SandboxClaimCondition,
+    InplaceUpdate as SandboxClaimInplaceUpdate,
+    Runtime as SandboxClaimRuntime,
 )
 from .sandboxset import (
     SandboxSet,
@@ -16,11 +29,15 @@ from .sandboxset import (
     ScaleStrategy as SandboxSetScaleStrategy,
     Runtime as SandboxSetRuntime,
 )
-from .sandboxclaim import (
-    SandboxClaim,
-    Spec as SandboxClaimSpec,
-    Status as SandboxClaimStatus,
-    Condition as SandboxClaimCondition,
-    InplaceUpdate as SandboxClaimInplaceUpdate,
-    Runtime as SandboxClaimRuntime,
+from .sandboxtemplate import (
+    SandboxTemplate,
+    Spec as SandboxTemplateSpec,
+    Runtime as SandboxTemplateRuntime,
+)
+from .sandboxupdateops import (
+    SandboxUpdateOps,
+    Spec as SandboxUpdateOpsSpec,
+    Status as SandboxUpdateOpsStatus,
+    Selector as SandboxUpdateOpsSelector,
+    Lifecycle as SandboxUpdateOpsLifecycle,
 )

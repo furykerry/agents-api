@@ -16,3 +16,6 @@
 vendor/
 
 .idea/
+
+# Python
+.ruff_cache/

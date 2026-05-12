@@ -1,5 +1,23 @@
 #!/usr/bin/env bash
 
+# Usage:
+#   ./hack/generate_client.sh                # update upstream + generate
+#   ./hack/generate_client.sh --skip-update  # skip upstream update, generate only
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+SKIP_UPDATE=false
+for arg in "$@"; do
+    case "${arg}" in
+        --skip-update) SKIP_UPDATE=true ;;
+    esac
+done
+
+if [[ "${SKIP_UPDATE}" == "false" ]]; then
+    echo "==> Updating upstream definitions (CRD + Go types)..."
+    "${SCRIPT_DIR}/update_upstream.sh"
+fi
+
 go mod vendor
 retVal=$?
 if [ $retVal -ne 0 ]; then

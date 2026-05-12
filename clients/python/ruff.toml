@@ -1,0 +1,3 @@
+[lint.per-file-ignores]
+# __init__.py re-exports are manually curated; skip isort to keep combined imports
+"__init__.py" = ["I"]

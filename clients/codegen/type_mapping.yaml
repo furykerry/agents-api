@@ -1,0 +1,50 @@
+# Type mapping rules for SDK type patching.
+#
+# After code generation, certain CRD fields marked with
+# `x-kubernetes-preserve-unknown-fields: true` lose concrete type information.
+# This file defines the replacement rules for each field.
+#
+# Maintenance:
+#   - When a new field with x-kubernetes-preserve-unknown-fields is added to CRDs,
+#     add a new entry below with the field name, Go type, and target types for each SDK.
+#   - Run `make generate-all` to regenerate + auto-patch.
+
+fields:
+  - name: metadata
+    go_type: "metav1.ObjectMeta"
+    java:
+      # Java generator handles ObjectMeta correctly, no patch needed
+      skip: true
+    python:
+      old_pattern: 'dict[str, Any]'
+      new_type: "V1ObjectMeta"
+      import: "V1ObjectMeta"
+
+  - name: template
+    go_type: "*corev1.PodTemplateSpec"
+    java:
+      old_type: "io.fabric8.kubernetes.api.model.AnyType"
+      new_type: "io.fabric8.kubernetes.api.model.PodTemplateSpec"
+    python:
+      old_pattern: "Any"
+      new_type: "V1PodTemplateSpec"
+      import: "V1PodTemplateSpec"
+
+  - name: volumeClaimTemplates
+    go_type: "[]corev1.PersistentVolumeClaim"
+    java:
+      old_type: "io.fabric8.kubernetes.api.model.AnyType"
+      new_type: "java.util.List<io.fabric8.kubernetes.api.model.PersistentVolumeClaim>"
+    python:
+      old_pattern: "Any"
+      new_type: "list[V1PersistentVolumeClaim]"
+      import: "V1PersistentVolumeClaim"
+
+  - name: patch
+    go_type: "runtime.RawExtension"
+    java:
+      old_type: "io.fabric8.kubernetes.api.model.AnyType"
+      new_type: "io.fabric8.kubernetes.api.model.runtime.RawExtension"
+    python:
+      # RawExtension maps to dict/Any in Python, keep as-is
+      skip: true
