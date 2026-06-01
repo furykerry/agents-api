@@ -28,7 +28,6 @@ class SandboxSetClient:
         )
 
     def get_sandboxset(self, name: str) -> dict:
-        """获取指定名称的 SandboxSet 资源"""
         return self.api.get_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -38,7 +37,6 @@ class SandboxSetClient:
         )
 
     def update_sandboxset(self, name: str, body: dict) -> dict:
-        """更新指定名称的 SandboxSet 资源"""
         return self.api.patch_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -49,7 +47,6 @@ class SandboxSetClient:
         )
 
     def delete_sandboxset(self, name: str, grace_period_seconds: int = None) -> dict:
-        """删除指定名称的 SandboxSet 资源"""
         return self.api.delete_namespaced_custom_object(
             group=self.group,
             version=self.version,

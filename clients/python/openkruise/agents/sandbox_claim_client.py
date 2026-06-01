@@ -29,7 +29,6 @@ class SandboxClaimClient:
         )
 
     def get_sandboxclaim(self, name: str) -> dict:
-        """获取指定名称的 SandboxClaim 资源"""
         return self.api.get_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -39,7 +38,6 @@ class SandboxClaimClient:
         )
 
     def update_sandboxclaim(self, name: str, body: dict) -> dict:
-        """更新指定名称的 SandboxClaim 资源"""
         return self.api.patch_namespaced_custom_object(
             group=self.group,
             version=self.version,
@@ -50,7 +48,6 @@ class SandboxClaimClient:
         )
 
     def delete_sandboxclaim(self, name: str, grace_period_seconds: int = None) -> dict:
-        """删除指定名称的 SandboxClaim 资源"""
         return self.api.delete_namespaced_custom_object(
             group=self.group,
             version=self.version,

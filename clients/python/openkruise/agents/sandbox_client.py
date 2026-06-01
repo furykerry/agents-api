@@ -37,16 +37,14 @@ class SandboxClient:
             name=name
         )
 
-    def update_sandbox(self, name: str, sandbox: Sandbox) -> dict:
-        # Pydantic -> dict
-        sandbox_dict = sandbox.model_dump(exclude_unset=True, by_alias=True)
+    def update_sandbox(self, name: str, body: dict) -> dict:
         return self.api.patch_namespaced_custom_object(
             group=self.group,
             version=self.version,
             namespace=self.namespace,
             plural=self.plural,
             name=name,
-            body=sandbox_dict
+            body=body
         )
 
     def delete_sandbox(self, name: str, grace_period_seconds: int = None) -> dict:

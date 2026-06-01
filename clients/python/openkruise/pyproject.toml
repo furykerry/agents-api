@@ -16,6 +16,7 @@ classifiers = [
 dependencies = [
     "kubernetes",
     "requests",
+    "pydantic>=2.0",
 ]
 
 [project.urls]
@@ -31,3 +32,7 @@ test = [
     "pytest",
     "pytest-xdist",
 ]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+pythonpath = [".", "test"]

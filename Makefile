@@ -98,6 +98,48 @@ generate-all: update-upstream
 	@hack/patch_sdk_types.sh
 endif
 
+# ==================== E2E Testing ====================
+
+KIND ?= kind
+KIND_CLUSTER_NAME ?= ci-testing
+KIND_IMAGE ?= kindest/node:v1.32.0
+KIND_VERSION ?= v0.22.0
+
+# Setup Kind cluster for e2e tests
+.PHONY: setup-test-e2e
+setup-test-e2e:
+	@echo "Creating Kind cluster..."
+	$(KIND) create cluster --name $(KIND_CLUSTER_NAME) --image $(KIND_IMAGE) --config test/kind-conf.yaml || true
+	@echo "Installing CRDs..."
+	kubectl apply -f agents/crds/
+
+# Run all SDK e2e tests
+.PHONY: test-e2e
+test-e2e: setup-test-e2e
+	bash hack/run-k8s-sdk-e2e-test.sh --sdk all
+
+# Run Go SDK e2e test
+.PHONY: test-e2e-go
+test-e2e-go: setup-test-e2e
+	bash hack/run-k8s-sdk-e2e-test.sh --sdk go
+
+# Run Java SDK e2e test
+.PHONY: test-e2e-java
+test-e2e-java: setup-test-e2e
+	bash hack/run-k8s-sdk-e2e-test.sh --sdk java
+
+# Run Python SDK e2e test
+.PHONY: test-e2e-python
+test-e2e-python: setup-test-e2e
+	bash hack/run-k8s-sdk-e2e-test.sh --sdk python
+
+# Cleanup Kind cluster
+.PHONY: cleanup-test-e2e
+cleanup-test-e2e:
+	@$(KIND) delete cluster --name $(KIND_CLUSTER_NAME)
+
+# ==================== Schema Generation ====================
+
 .PHONY: gen-schema-only
 gen-schema-only:
 	go run cmd/gen-schema/main.go
